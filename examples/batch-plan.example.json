@@ -1,0 +1,64 @@
+{
+  "_readme": "批量计划示例：改改 paths 就能跑。python tools/build_queue.py --check examples/batch-plan.example.json 先校验，再加 --add 入队。",
+  "defaults": {
+    "model": "gpt-image-2",
+    "ratio": "3:4",
+    "provider": "imagifly"
+  },
+  "images": {
+    "gate": "C:/Users/you/Desktop/photos/school-gate.jpg",
+    "night": "C:/Users/you/Desktop/photos/night-view.jpg",
+    "street": "C:/Users/you/Desktop/photos/street.jpg"
+  },
+  "tasks": [
+    {
+      "tag": "gate-贴纸",
+      "template": "i2i/03a_记忆贴纸_单层_I2I.txt",
+      "image": "gate"
+    },
+    {
+      "tag": "gate-票根",
+      "template": "i2i/03b_水彩票根_单层_I2I.txt",
+      "image": "gate"
+    },
+    {
+      "tag": "gate-徽章-高清",
+      "template": "i2i/03c_珐琅徽章_单层_I2I.txt",
+      "image": "gate",
+      "tier": "2k"
+    },
+    {
+      "tag": "night-四层",
+      "template": "i2i/03_四层风格转译_I2I.txt",
+      "image": "night",
+      "model": "nano-banana-2"
+    },
+    {
+      "tag": "street-亚克力",
+      "template": "i2i/04_亚克力SceneMap_I2I.txt",
+      "image": "street",
+      "style": "realistic"
+    },
+    {
+      "tag": "日本海报",
+      "template": "t2i/01_手绘旅行海报_T2I.txt",
+      "vars": { "COUNTRY": "日本" }
+    },
+    {
+      "tag": "东京冰棒",
+      "template": "t2i/02_冰棒微缩城市_T2I.txt",
+      "vars": {
+        "CITY": "东京",
+        "LANDMARK": "东京塔",
+        "LOCAL_BUILDING": "晴空塔"
+      }
+    },
+    {
+      "tag": "自由发挥",
+      "prompt": "把这张照片做成复古旅行明信片风格，暖色调，带邮戳",
+      "image": "street",
+      "ratio": "1:1",
+      "n": 2
+    }
+  ]
+}

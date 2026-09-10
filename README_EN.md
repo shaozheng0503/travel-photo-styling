@@ -124,6 +124,7 @@ python main.py --list-providers                          # available services
 python main.py --list-models                             # models of current provider
 python main.py --check                                   # config / login check
 python main.py --render <template> --var K=V --add       # template → queue
+python tools/build_queue.py <plan.json> --add            # batch plan → queue
 python main.py --validate                                # validate queue (no API)
 python main.py --estimate                                # cost estimate (no API)
 python main.py --dry-run                                 # parse preview (no API)
@@ -132,8 +133,21 @@ python main.py 3                                         # run first 3 only
 python main.py --confirm                                 # allow high-cost tasks
 python main.py --retry-failed                            # re-enqueue failures
 python main.py --summary                                 # result summary
-python tests/test_offline.py                             # offline tests (39 cases, zero cost)
+python tests/test_offline.py                             # offline tests (66 cases, zero cost)
 ```
+
+### Batch plan (dozens of jobs at once)
+
+Instead of repeating `--render`, write one JSON plan (templates × photos × params):
+
+```bash
+cp examples/batch-plan.example.json my-plan.json
+python tools/build_queue.py my-plan.json --check         # validate only
+python tools/build_queue.py my-plan.json --add           # expand into prompts.txt
+```
+
+`defaults` holds shared params, `images` aliases your photos, each `tasks` entry picks a
+`template` + `image` + `vars` and may override any inline param.
 
 ## Plugging in your own API
 
@@ -207,6 +221,11 @@ Each success is atomically moved to `done.txt` — just re-run to resume. Failur
 
 ## License
 
-[MIT](LICENSE)
+- **Code & docs**: [MIT](LICENSE)
+- **Prompt templates** (`prompts/`): [CC BY 4.0](LICENSE-PROMPTS.md) — commercial use and
+  modification allowed, just keep attribution
+
+Contributing? See [CONTRIBUTING.md](CONTRIBUTING.md). Driving this from an AI agent?
+See [SKILL.md](SKILL.md).
 
 Generated results depend on the model and platform you use. This repo provides templates and tooling only; no guarantee of any third-party platform's availability.

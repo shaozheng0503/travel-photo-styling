@@ -235,6 +235,62 @@ def test_placeholders():
     check("无占位符原样", out == "没有占位符" and not missing)
 
 
+def test_build_queue():
+    print("[tools] 批量计划 build_queue")
+    import importlib.util
+    import tempfile
+    spec = importlib.util.spec_from_file_location(
+        "build_queue", os.path.join(ROOT, "tools", "build_queue.py"))
+    bq = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bq)
+
+    # 真实模板（仓库内）+ 临时照片文件
+    tmpdir = tempfile.mkdtemp()
+    photo = os.path.join(tmpdir, "gate.jpg")
+    open(photo, "wb").write(b"\xff\xd8\xff\xe0fake")
+
+    plan = {
+        "defaults": {"model": "gpt-image-2", "ratio": "3:4"},
+        "images": {"gate": photo},
+        "tasks": [
+            {"tag": "贴纸", "template": "i2i/03a_记忆贴纸_单层_I2I.txt", "image": "gate"},
+            {"tag": "高清", "template": "i2i/03c_珐琅徽章_单层_I2I.txt",
+             "image": "gate", "tier": "2k", "model": "nano-banana-2"},
+            {"tag": "自由", "prompt": "做成明信片", "image": "gate", "ratio": "1:1", "n": 2},
+        ],
+    }
+    lines, warnings, errors = bq.build_lines(plan)
+    check("无阻断错误", not errors, str(errors))
+    check("展开 3 条", len(lines) == 3, str(len(lines)))
+    check("defaults 生效", "model=gpt-image-2" in lines[0] and "| 3:4" in lines[0])
+    if len(lines) >= 2:
+        check("task 覆盖 defaults",
+              "model=nano-banana-2" in lines[1] and "tier=2k" in lines[1])
+        check("模板正文入行", "海报" in lines[0] or "贴纸" in lines[0])
+    if len(lines) >= 3:
+        check("自由 prompt", lines[2].startswith("做成明信片"))
+        check("ratio 覆盖", "| 1:1" in lines[2])
+        check("x2 批次", "x2" in lines[2])
+    check("img 路径正向斜杠",
+          all("img=" in ln and "\\" not in ln.split("img=")[1] for ln in lines))
+
+    # 占位符未填 → 警告不阻断
+    _, w2, e2 = bq.build_lines({"tasks": [{"template": "t2i/01_手绘旅行海报_T2I.txt"}]})
+    check("占位符缺失仅警告", not e2 and any("COUNTRY" in x for x in w2), str((w2, e2)))
+
+    # 模板不存在 → 阻断
+    _, _, e3 = bq.build_lines({"tasks": [{"template": "i2i/不存在_I2I.txt"}]})
+    check("模板缺失阻断", bool(e3))
+
+    # 照片不存在 → 警告但仍入队
+    l4, w4, e4 = bq.build_lines({"tasks": [{"prompt": "x", "image": "C:/nope/zzz.jpg"}]})
+    check("照片缺失仅警告", not e4 and len(l4) == 1 and any("不存在" in x for x in w4))
+
+    # 空计划 → 阻断
+    _, _, e5 = bq.build_lines({})
+    check("空计划报错", bool(e5))
+
+
 def main():
     test_queue_parse()
     test_provider_registry()
@@ -244,6 +300,7 @@ def main():
     test_imagifly_submit_payload()
     test_single_line()
     test_placeholders()
+    test_build_queue()
     print(f"\n结果：{PASS} 通过，{FAIL} 失败")
     return 0 if FAIL == 0 else 1
 

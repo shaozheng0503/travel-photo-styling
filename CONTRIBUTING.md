@@ -36,8 +36,9 @@ Issue 里请带上：Python 版本、操作系统、完整报错、`--check` 输
 ## 提交前自检
 
 ```bash
-python tests/test_offline.py     # 必须全绿（53 用例，纯离线）
+python tests/test_offline.py     # 必须全绿（66 用例，纯离线）
 python main.py --list-providers  # CLI 冒烟
+python tools/build_queue.py examples/batch-plan.example.json --check  # 计划器冒烟
 ```
 
 新增逻辑请补进 `tests/test_offline.py`，保持零网络、零花费。

@@ -34,6 +34,9 @@ python main.py --summary
 
 - **路径用绝对路径**：`--img C:/Users/xxx/photo.jpg`（正斜杠）。相对路径按 cwd 解析，容易错。
 - **一次一图一风格**：`--render` 一条命令只加一条；多条就跑多次 `--add`。
+- **超过 5 条就写计划文件**：手写 N 遍 `--render` 容易出错。改
+  `examples/batch-plan.example.json` 后 `python tools/build_queue.py plan.json --check`
+  校验、`--add` 入队，一次展开几十上百条。
 - **失败不慌**：失败的进 `failed.jsonl`，`--retry-failed` 一键重入队重跑。
 - **成本意识**：跑批前必须 `--estimate`。`nano-banana-2` 等贵模型必须让用户确认。
 - **T2I 模板要填占位符**：`--var COUNTRY=日本`，漏填会提醒。

@@ -112,7 +112,35 @@ T2I 占位符：01 用 `[COUNTRY]`；02 用 `[CITY]` `[LANDMARK]` `[LOCAL_BUILDI
 | `3:4` 等 | 宽高比 |
 | `x2`~`x4` | 每条生成数量 |
 | `img=` | 参考图路径（逗号分隔多张） |
-| `style=` / `neg=` / `steps=` / `tier=` | 风格 / 负面词 / 步数 / 分辨率档 |
+| `style=` / `neg=` / `steps=` / `tier=` / `seed=` | 风格 / 负面词 / 步数 / 分辨率档 / 种子 |
+
+### 4. 一次编排几十上百条（批量计划）
+
+手写 N 遍 `--render` 太累时，写一份 JSON 计划一次展开（模板 × 照片 × 参数任意组合）：
+
+```bash
+cp examples/batch-plan.example.json my-plan.json   # 改掉 images 里的路径
+python tools/build_queue.py my-plan.json --check   # 校验（不写任何文件）
+python tools/build_queue.py my-plan.json --add     # 展开后追加进 prompts.txt
+python main.py --estimate && python main.py        # 照常预检 + 跑
+```
+
+`defaults` 放公共参数，`images` 给照片起别名，`tasks` 每条指定模板 + 照片，
+并可用任意内联参数覆盖 defaults：
+
+```json
+{
+  "defaults": {"model": "gpt-image-2", "ratio": "3:4"},
+  "images": {"gate": "C:/photos/gate.jpg"},
+  "tasks": [
+    {"template": "i2i/03a_记忆贴纸_单层_I2I.txt", "image": "gate"},
+    {"template": "i2i/03c_珐琅徽章_单层_I2I.txt", "image": "gate", "tier": "2k"},
+    {"template": "t2i/01_手绘旅行海报_T2I.txt", "vars": {"COUNTRY": "日本"}}
+  ]
+}
+```
+
+模板缺失直接报错；照片路径不存在只警告——方便先在别的机器写好计划再回来跑。
 
 ## CLI 命令速查
 
@@ -120,7 +148,8 @@ T2I 占位符：01 用 `[COUNTRY]`；02 用 `[CITY]` `[LANDMARK]` `[LOCAL_BUILDI
 python main.py --list-providers   # 可用生图服务
 python main.py --list-models      # 当前服务的模型清单
 python main.py --check            # 配置/登录态自检
-python main.py --render <模板> --img <照片> --add   # 模板 → 队列
+python main.py --render <模板> --img <照片> --add   # 单条模板 → 队列
+python tools/build_queue.py <计划.json> --add       # 批量计划 → 队列
 python main.py --validate         # 校验队列（不调 API）
 python main.py --estimate         # 估算成本（不调 API）
 python main.py --dry-run          # 解析预演（不调 API）
@@ -129,7 +158,7 @@ python main.py 3                  # 只跑前 3 条
 python main.py --confirm          # 跑高成本任务（≥5 成本单位）
 python main.py --retry-failed     # 失败任务一键重入队
 python main.py --summary          # 汇总结果
-python tests/test_offline.py      # 离线单测（34 用例，不花钱）
+python tests/test_offline.py      # 离线单测（66 用例，不花钱）
 ```
 
 ## 接入你自己的生图 API
@@ -212,12 +241,17 @@ travel-photo-styling/
 │   ├── i2i/                 #   图生图 ×7
 │   ├── 风格速查表.md         #   照片类型 → 风格适配矩阵
 │   └── README.md            #   使用说明
+├── tools/
+│   └── build_queue.py       #   批量计划(JSON) → prompts.txt
+├── examples/
+│   ├── batch-plan.example.json  # 批量计划示例
+│   └── prompts.example.txt  #   队列写法示例
 ├── config/
 │   ├── config.json          #   默认 provider / 模型 / 比例
 │   ├── providers.json       #   自定义服务接入配置（含示例）
 │   └── cookie.txt.example   #   Imagifly cookie 模板
 ├── docs/images/             # README 效果图
-└── tests/test_offline.py    # 离线单测（34 用例）
+└── tests/test_offline.py    # 离线单测（66 用例）
 ```
 
 ## 常见问题
