@@ -32,6 +32,14 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Windows 控制台默认 GBK/cp1252，打印中文/符号会 UnicodeEncodeError——强制 UTF-8
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from core.queue import (ASPECT_RATIOS, load_config, load_failed, load_queue,
                         log, parse_prompt_line, record_failure, record_success)
 from providers import (available_names, build_provider, default_provider_name,

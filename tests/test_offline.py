@@ -11,6 +11,13 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+# Windows 控制台默认 GBK/cp1252，打印中文/✓ 符号会 UnicodeEncodeError
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from core.queue import parse_prompt_line, load_queue
 from core.utils import single_line_prompt
 from providers import REGISTRY, build_provider, load_providers_config
