@@ -239,6 +239,11 @@ travel-photo-styling/
 
 ## 许可证
 
-[MIT](LICENSE) — 模板和代码随便用，欢迎衍生创作。
+- **代码与文档**：[MIT](LICENSE)
+- **提示词模板**（`prompts/` 目录）：[CC BY 4.0](LICENSE-PROMPTS.md) —— 可商用、可改写，保留出处即可
+
+想贡献新的生图服务或提示词模板，见 [CONTRIBUTING.md](CONTRIBUTING.md)；
+在 AI Agent 里驱动这套工具，见 [SKILL.md](SKILL.md)。
+风格来源署名见 [prompts/README.md](prompts/README.md#来源与署名)。
 
 生成效果受所用模型与平台影响，本仓库只提供模板与工具，不担保任何平台的可用性。

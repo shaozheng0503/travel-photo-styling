@@ -3,8 +3,8 @@ config/cookie.txt
 config/providers.local.json
 *.local.json
 
-# 运行产物
-images/
+# 运行产物（/ 开头表示仅根目录；docs/images 是文档配图，需入库）
+/images/
 prompts.txt
 done.txt
 results.jsonl

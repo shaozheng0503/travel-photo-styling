@@ -63,3 +63,9 @@ python main.py
 ## 效果参考
 
 每种风格的真实生成效果见仓库根 [README](../README.md) 的效果图矩阵。
+
+## 来源与署名
+
+- 04 亚克力 SceneMap：风格灵感来自小红书创作者 **贝赫拉 Béril**，在本仓库迭代改写
+- 其余 8 套：本仓库原创，或在通用风格描述基础上重构
+- 所有模板按 **CC BY 4.0** 发布，商用/改写均可，保留出处即可，详见 [`LICENSE-PROMPTS.md`](../LICENSE-PROMPTS.md)

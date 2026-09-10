@@ -57,9 +57,9 @@ class OpenAICompatProvider(ImageProvider):
             # edits 走 multipart（与 imagifly provider 复用编码器）
             from providers.imagifly import ImagiflyProvider
             fields = {"model": model, "prompt": job["prompt"], "n": str(batch_size)}
-            raw, fname = ImagiflyProvider.read_image_source(imgs[0])
+            raw, fname, mime, w, h = ImagiflyProvider.read_image_source(imgs[0])
             boundary, body = ImagiflyProvider.build_form(
-                fields, [("image", fname, raw)])
+                fields, [("image", fname, mime, raw)])
             headers = self.auth_headers()
             headers["Content-Type"] = f"multipart/form-data; boundary={boundary}"
             status, data = http_json("POST", self.base_url + path, headers, body,

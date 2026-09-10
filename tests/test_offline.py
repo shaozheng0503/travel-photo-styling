@@ -148,10 +148,13 @@ def test_imagifly_multipart():
     print("[imagifly] multipart 与幂等键")
     boundary, body = ImagiflyProvider.build_form(
         {"prompt": "一只猫", "model": "gpt-image-2"},
-        [("referenceImages", "ref.png", b"\x89PNG\r\n\x1a\nFAKE")])
+        [("referenceImages", "ref.png", "image/png", b"\x89PNG\r\n\x1a\nFAKE")])
     check("boundary 出现", boundary.encode() in body)
     check("字段编码", "一只猫".encode("utf-8") in body)
-    check("文件名编码", b'ref.png' in body)
+    check("文件名编码", b"ref.png" in body)
+    check("mime 编码", b"Content-Type: image/png" in body)
+    check("None 字段跳过", b"name=\"skip\"" not in
+          ImagiflyProvider.build_form({"skip": None}, [])[1])
     # 幂等键格式
     import re
     m = re.search(rb'Content-Disposition: form-data; name="prompt"', body)
@@ -161,12 +164,54 @@ def test_imagifly_multipart():
     png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8 + (400).to_bytes(4, "big") + (300).to_bytes(4, "big")
     w, h = ImagiflyProvider._image_dimensions(png)
     check("PNG 尺寸", (w, h) == (400, 300))
+    w, h = ImagiflyProvider._image_dimensions(b"\xff\xd8\xff\xe0garbage")
+    check("JPEG 垃圾回退 1024", (w, h) == (1024, 1024))
+
+    # WEBP 尺寸（VP8X）
+    webp = b"RIFF" + b"\x00" * 4 + b"WEBPVP8X" + b"\x00" * 8 + (1023).to_bytes(3, "little") + (767).to_bytes(3, "little")
+    w, h = ImagiflyProvider._image_dimensions(webp)
+    check("WEBP VP8X 尺寸", (w, h) == (1024, 768))
 
     # 魔数校验
     from core.http import verify_download
     check("PNG 魔数过", verify_download(b"\x89PNG\r\n\x1a\n" + b"x" * 20, "image") is None)
     check("HTML 拦截", verify_download(b"<html>error page</html>", "image") is not None)
     check("短内容拦截", verify_download(b"abc", "image") is not None)
+
+
+def test_imagifly_submit_payload():
+    print("[imagifly] 提交 payload 与响应解包")
+    import providers.imagifly as im
+    p = ImagiflyProvider.__new__(ImagiflyProvider)  # 不触发 cookie 加载
+    p.config = {}
+    p.cookie = ""
+    captured = {}
+
+    def mock_hj(method, url, headers, body, timeout):
+        captured["headers"] = headers
+        import json as j
+        captured["body"] = j.loads(body.decode("utf-8")) if headers["Content-Type"] == "application/json" else None
+        return 202, {"generation": {"id": "GEN123", "status": "pending"}}
+
+    orig_hj = im.http_json
+    im.http_json = mock_hj
+    try:
+        job = {"prompt": "a cat", "overrides": {"tier": "2k", "steps": 30, "neg": "blurry"}}
+        gen = p.submit(job, "gpt-image-2", "3:4", 2, None)
+        check("generation 解包", gen["id"] == "GEN123")
+        body = captured["body"]
+        check("size 传档位", body["size"] == "2k", str(body.get("size")))
+        check("resolutionTier", body["resolutionTier"] == "2k")
+        check("quality 映射", body["quality"] == "high")
+        check("responseFormat b64", body["responseFormat"] == "b64_json")
+        check("requestCount=batch", body["requestCount"] == 2)
+        check("steps 透传", body["steps"] == 30)
+        check("negativePrompt", body["negativePrompt"] == "blurry")
+        sid = body["submissionId"]
+        check("幂等键 = sid:idx", captured["headers"]["Idempotency-Key"] == f"{sid}:1")
+        check("Referer 存在", "Referer" in captured["headers"])
+    finally:
+        im.http_json = orig_hj
 
 
 def test_single_line():
@@ -196,6 +241,7 @@ def main():
     test_generic_sync()
     test_generic_poll_task()
     test_imagifly_multipart()
+    test_imagifly_submit_payload()
     test_single_line()
     test_placeholders()
     print(f"\n结果：{PASS} 通过，{FAIL} 失败")
