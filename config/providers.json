@@ -1,0 +1,51 @@
+{
+  "_readme": "自定义生图服务接入配置。把下面 myapi 段抄去改名即可；api_key/cookie 等敏感信息也可用环境变量替代。此文件可提交，但别把真实密钥写进来——用 providers.local.json 或环境变量放敏感值。",
+
+  "openai_compat": {
+    "_comment": "OpenAI 兼容 API（OpenAI 官方 / DashScope 兼容模式 / SiliconFlow / one-api 中转等）。api_key 建议用环境变量 OPENAI_API_KEY。",
+    "api_key": "",
+    "base_url": "https://api.openai.com/v1",
+    "models": {
+      "gpt-image-1": {"ref": 1, "cost": null}
+    }
+  },
+
+  "myapi": {
+    "_comment": "示例：纯配置接入任意 API（generic 类型）。三种模式：sync_url / sync_b64 / poll_task。",
+    "type": "generic",
+    "api_key": "YOUR_KEY",
+    "models": {
+      "my-model-name": {"ref": 1, "cost": 1}
+    },
+    "templates": {
+      "submit": {
+        "method": "POST",
+        "url": "https://your-api.example.com/v1/generate",
+        "headers": {
+          "Authorization": "Bearer {api_key}",
+          "Content-Type": "application/json"
+        },
+        "body_json": {
+          "model": "{model}",
+          "prompt": "{prompt}",
+          "size": "{ratio}"
+        }
+      },
+      "poll": {
+        "method": "GET",
+        "url": "https://your-api.example.com/v1/tasks/{id}",
+        "headers": {"Authorization": "Bearer {api_key}"}
+      }
+    },
+    "response": {
+      "mode": "sync_url",
+      "ok_codes": [200, 201, 202],
+      "url_key": "data.0.url",
+      "b64_key": "data.0.b64_json",
+      "task_id_key": "task_id",
+      "status_key": "status",
+      "done_value": "success"
+    },
+    "request_timeout_seconds": 300
+  }
+}

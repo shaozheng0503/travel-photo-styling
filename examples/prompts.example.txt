@@ -1,0 +1,8 @@
+# 队列示例：每行一条任务，`|` 后是内联参数
+# 图生图（模板渲染后的单行提示词 + 参考图）
+记忆贴纸模板长提示词…… | model=gpt-image-2 | 3:4 | img=/path/to/photo.jpg
+水彩票根模板长提示词…… | model=gpt-image-2 | 3:4 | img=/path/to/photo.jpg
+# 文生图
+为[日本]制作一张手绘旅行海报…… | model=gpt-image-2 | 4:5
+# 便宜模型批量
+a cat on a beach | model=Wai-SDXL | 1:1 | x4

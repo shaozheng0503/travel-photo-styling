@@ -1,0 +1,17 @@
+# 敏感信息
+config/cookie.txt
+config/providers.local.json
+*.local.json
+
+# 运行产物
+images/
+prompts.txt
+done.txt
+results.jsonl
+failed.jsonl
+run.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
