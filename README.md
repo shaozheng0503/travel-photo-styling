@@ -87,10 +87,13 @@ python main.py --render i2i/03a_记忆贴纸_单层_I2I.txt --img 你的照片.j
 python main.py --validate    # 校验
 python main.py               # 生成（高成本模型需 --confirm）
 
-# 文生图：日本手绘海报
-python main.py --render t2i/01_手绘旅行海报_T2I.txt --add
+# 文生图：用 --var 填占位符
+python main.py --render t2i/01_手绘旅行海报_T2I.txt --var COUNTRY=日本 --add
+python main.py --render t2i/02_冰棒微缩城市_T2I.txt --var CITY=东京 --var LANDMARK=东京塔 --var LOCAL_BUILDING=晴空塔 --add
 python main.py
 ```
+
+T2I 占位符：01 用 `[COUNTRY]`；02 用 `[CITY]` `[LANDMARK]` `[LOCAL_BUILDING]`，漏填会在渲染时提醒。
 
 ### 3. 批量玩法
 
@@ -184,9 +187,11 @@ def register(registry):
 `prompts/` 的 9 套模板全部经过真实生成的多轮迭代——每条「防翻车条款」（禁裁切、贴纸去重、地名逐字复用、日期季节化）背后都是一次真实的翻车。使用说明见 [prompts/README.md](prompts/README.md)。
 
 模板是纯文本，你可以：
-- 直接用 CLI `--render` 入队
+- 直接用 CLI `--render` 入队（T2I 模板配合 `--var` 填占位符）
 - 粘贴到任何生图产品（ChatGPT、即梦、豆包……）配合照片使用
-- 改写占位符（`[COUNTRY]`）适配你的场景
+- 手动替换 `[COUNTRY]` `[CITY]` 等占位符适配你的场景
+
+[English documentation](README_EN.md)
 
 ## 目录结构
 

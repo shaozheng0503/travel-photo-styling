@@ -277,7 +277,18 @@ def cmd_render(cfg, args):
             print(f"❌ 模板不存在: {pfile}")
             return 1
     text = open(pfile, encoding="utf-8").read()
-    from core.utils import single_line_prompt
+    from core.utils import single_line_prompt, apply_placeholders, extract_placeholders
+    # --var KEY=VALUE 替换 [KEY] 占位符（大小写不敏感）
+    variables = {}
+    for kv in (args.var or []):
+        if "=" not in kv:
+            print(f"❌ --var 格式应为 KEY=VALUE，收到: {kv}")
+            return 1
+        k, v = kv.split("=", 1)
+        variables[k] = v
+    text, missing = apply_placeholders(text, variables)
+    if missing:
+        print(f"⚠️ 模板中的占位符未替换（用 --var {missing[0]}=值 补上）: {missing}")
     inline = single_line_prompt(text)
     model = args.model or "gpt-image-2"
     ratio = args.ratio or "3:4"
@@ -303,6 +314,8 @@ def main():
     ap.add_argument("--model", help="覆盖默认模型")
     ap.add_argument("--ratio", help="覆盖默认宽高比")
     ap.add_argument("--render", metavar="TEMPLATE", help="把模板文件渲染成单行队列条目（打印或 --add 入队）")
+    ap.add_argument("--var", action="append", metavar="KEY=VALUE",
+                    help="配合 --render：替换模板占位符，如 --var COUNTRY=日本（可多次）")
     ap.add_argument("--img", help="配合 --render：参考图路径")
     ap.add_argument("--add", action="store_true", help="配合 --render：渲染后直接追加进 prompts.txt")
     ap.add_argument("--validate", action="store_true", help="校验队列（不调 API）")

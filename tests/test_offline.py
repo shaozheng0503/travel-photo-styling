@@ -169,6 +169,20 @@ def test_single_line():
     check("竖线移除", "|" not in out)
 
 
+def test_placeholders():
+    print("[utils] 占位符替换")
+    from core.utils import apply_placeholders, extract_placeholders
+    tpl = "为[COUNTRY]制作海报，地标是[LANDMARK]，城市[COUNTRY]很大"
+    check("提取占位符", extract_placeholders(tpl) == ["COUNTRY", "LANDMARK"])
+    out, missing = apply_placeholders(tpl, {"COUNTRY": "日本", "LANDMARK": "东京塔"})
+    check("全替换", out == "为日本制作海报，地标是东京塔，城市日本很大" and not missing)
+    out, missing = apply_placeholders(tpl, {"country": "日本"})
+    check("大小写不敏感", out.startswith("为日本"))
+    check("缺失收集", missing == ["LANDMARK"])
+    out, missing = apply_placeholders("没有占位符", {})
+    check("无占位符原样", out == "没有占位符" and not missing)
+
+
 def main():
     test_queue_parse()
     test_provider_registry()
@@ -176,6 +190,7 @@ def main():
     test_generic_poll_task()
     test_imagifly_multipart()
     test_single_line()
+    test_placeholders()
     print(f"\n结果：{PASS} 通过，{FAIL} 失败")
     return 0 if FAIL == 0 else 1
 
